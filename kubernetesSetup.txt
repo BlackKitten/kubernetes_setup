@@ -1,0 +1,51 @@
+#!/bin/bash
+#SETUP KUBERNETES CLUSTER USING KUBEADM 7/8/2017
+#MarijnvdH Benbe
+#
+#Install docker
+sudo yum update -y && sudo yum install -y docker &&
+#Download and install kubelet
+curl -LO https://storage.googleapis.com/kubernetes-release/release/v1.7.3/bin/linux/amd64/kubectl &&
+# Make the kubectl binary executable
+chmod +x ./kubectl &&
+# Move the binary in to your path
+sudo mv ./kubectl /usr/local/bin/kubectl && 
+# Enable shell autocompletion
+source <(kubectl completion bash) &&
+#
+#Install kubeadm
+sudo bash -c 'cat <<EOF > /etc/yum.repos.d/kubernetes.repo
+[kubernetes]
+name=Kubernetes
+baseurl=https://packages.cloud.google.com/yum/repos/kubernetes-el7-x86_64
+enabled=1
+gpgcheck=1
+repo_gpgcheck=1
+gpgkey=https://packages.cloud.google.com/yum/doc/yum-key.gpg
+        https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
+EOF' &&
+sudo yum update -y &&
+# Allow containers to access the host filesystem
+sudo setenforce 0 &&
+# Install kubeadm
+sudo yum install -y kubelet kubeadm &&
+# enable and start kubelet - kubelet is now restarting every few seconds, as it waits in a crashloop for kubeadm to tell it what to do
+sudo systemctl enable kubelet && sudo systemctl start kubelet
+#
+# FOR WEAVE
+# Initialize the master
+#kubeadm init
+# Install a pod network
+#kubectl apply -f https://git.io/weave-kube-1.6
+# OR
+#kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version | base64 | tr -d '\n')"
+#
+#FOR FLANNEL
+# Initialize the master
+#kubeadm init --pod-network-cidr=10.244.0.0/16
+# Install a pod network
+#kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
+#kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel-rbac.yml
+#
+# join nodes
+#kubeadm join --token <token> <master-ip>:<master-port>
