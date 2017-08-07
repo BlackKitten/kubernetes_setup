@@ -1,0 +1,14 @@
+authtoken: ngrok authentication token
+tunnels: 
+ kube1:
+  addr: 22221
+  proto: tcp
+ kube2:
+  addr: 22222
+  proto: tcp
+ kube3:
+  addr: 22223
+  proto: tcp
+ kube4:
+  addr: 22224
+  proto: tcp
