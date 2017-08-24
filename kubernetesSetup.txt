@@ -3,7 +3,7 @@
 #MarijnvdH Benbe
 #
 #Install docker
-sudo yum update -y && sudo yum install -y docker &&
+sudo yum update -y && sudo yum install -y docker && sudo systemctl enable docker && sudo systemctl start docker &&
 #Download and install kubelet
 curl -LO https://storage.googleapis.com/kubernetes-release/release/v1.7.3/bin/linux/amd64/kubectl &&
 # Make the kubectl binary executable
@@ -31,10 +31,22 @@ sudo setenforce 0 &&
 sudo yum install -y kubelet kubeadm &&
 # enable and start kubelet - kubelet is now restarting every few seconds, as it waits in a crashloop for kubeadm to tell it what to do
 sudo systemctl enable kubelet && sudo systemctl start kubelet
+
+# by default all trafic to docker is run through iptables
+# we want kubernetes to handle traffic to docker; so this needs to be disabled
+sudo bash -c 'cat <<EOF > /etc/sysctl.d/1-disableIptablesBridge.conf
+net.bridge.bridge-nf-call-iptables = 1
+EOF' &&
+sudo sysctl -p /etc/sysctl.d/*.conf
 #
 # FOR WEAVE
 # Initialize the master
-#kubeadm init
+kubeadm init &&
+mkdir -p $HOME/.kube &&
+sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config &&
+sudo chown $(id -u):$(id -g) $HOME/.kube/config &&
+#apply weave net
+kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version | base64 | tr -d '\n')"
 # Install a pod network
 #kubectl apply -f https://git.io/weave-kube-1.6
 # OR
